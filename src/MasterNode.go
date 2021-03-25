@@ -1,5 +1,7 @@
 package main
 
+//@Author: Richard Zins
+
 import (
 	"crypto/rand"
 	"crypto/tls"
@@ -8,23 +10,6 @@ import (
 )
 
 func main() {
-	//6633 is node on the keypad
-	//connThread, err := net.Listen("tcp", "localhost:6633")
-	 //if err != nil {
-	 	//fmt.Println("Error listening:", err.Error())
-	 	//os.Exit(1)
-	 //}
-	 
-	 //defer connThread.Close()
-
-	 //for {
-	 	//connection, err := connThread.Accept()
-	 	//if err != nil {
-	 		//fmt.Println("Error connecting:", err.Error())
-	 		//return
-	 	//}
-	 	//fmt.Println("Client connected! Their addr is: " + connection.RemoteAddr().String())
-	//}
 
 	cert, err := tls.LoadX509KeyPair("server.pem", "server.key")
 
@@ -39,7 +24,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+	//6633 id node on the keypad 	
 	log.Printf("Server(TLS) up and listening on port 6633")
 
 	for {
