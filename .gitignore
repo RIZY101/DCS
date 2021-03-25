@@ -1,0 +1,3 @@
+# ignore TLS keys
+*.pem
+*.key
