@@ -26,6 +26,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	conn.Write([]byte("TEST FROM NODE"))
 	defer conn.Close()
 	log.Printf("Connection established between %s and localhost.\n", conn.RemoteAddr().String())    
 }

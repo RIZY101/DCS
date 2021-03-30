@@ -39,6 +39,9 @@ func main() {
 
 func handleConnection(c net.Conn) {
 	log.Printf("Client connected! Their addr is: " + c.RemoteAddr().String())
+	buffer := make([]byte, 32)
+	c.Read(buffer)
+	log.Printf(string(buffer))
 }
 
 
