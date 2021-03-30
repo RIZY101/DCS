@@ -24,7 +24,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//6633 id node on the keypad 	
+	//6633 is node on the keypad 	
 	log.Printf("Server(TLS) up and listening on port 6633")
 
 	for {

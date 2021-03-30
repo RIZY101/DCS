@@ -1,0 +1,51 @@
+Request protocol messages will always recieve a response protocol message. Responses may or may not recieve their own response depending on what it is.
+
+Requests:
+
+Add to list adds a client to the master nodes list of nodes
+ATL ipOfNode storageInGB (Node -> MasterNode)
+
+Remove from list removes the node from the master nodes list of nodes
+RFL nodeId key (Node -> MasterNode)
+
+Node allows the node to ask the master node for a node that can store its data
+NODE (Node -> MasterNode)
+
+Updated allows the node to update their IP in the list on the master node because ISP's are lame and dont give us static IPV6's yet
+UPDATE nodeId key (Node -> MasterNode)
+
+Store allows a node to store data on another node as long as its online note this key is different from the key given by masternode otherwise this new node could update the other nodes IP which is not good
+STORE nodeId key2 data (Node1 -> Node2)
+
+A request from node1 to retrieve its data from node2
+RETRIEVE nodId key2 (Node1 -> Node2)
+
+A request from node1 for node2 to delete all its data
+REMOVE nodeId key2 (Node1 -> Node2)
+
+Responses:
+
+Confirmation that they were added to the list because certain IP's may be blacklisted and their nodeid plus a key so that they can update their ip in the future
+ATLR yesOrNo nodeId key (MasterNode -> Node)
+
+A response for whether or not the master node removed the node from the list
+RFLR yesOrNo (MasterNode -> Node)
+
+Response from MasterNode containing the IP of the new Node the requester should store their data at
+NODER ipOfNewNode nodeId (MasterNode -> Node)
+
+Response that confirms if the nodes IP was updated
+UPDATER yesOrNO (MasterNode -> Node)
+
+Response that validates whether or not all the data was recieved
+STORER yesOrNo
+
+A response from node2 with node1's data if their key was valid
+RETRIEVE yesOrNo data (Node2 -> Node1)
+
+A response from node 2 to node 1 on whether their data was removed or not
+REMOVER yesOrNo (Node2 -> Node1)
+
+***Please note we are not concerned that keys are being sent in plain text over the protocol given that the messaging is encrypted over TLS all protocol messages end in \n***   
+
+ 
