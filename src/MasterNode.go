@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"net"
 	"log"
+	"strings"
 )
 
 func main() {
@@ -41,7 +42,30 @@ func handleConnection(c net.Conn) {
 	log.Printf("Client connected! Their addr is: " + c.RemoteAddr().String())
 	buffer := make([]byte, 32)
 	c.Read(buffer)
-	log.Printf(string(buffer))
+	msg := string(buffer)
+	resp := parseMsg(msg)
+	c.Write([]byte(resp))
+}
+
+func parseMsg (msg string) string {
+	args := strings.Split(msg, " ")
+	
+	if args[0] == "ATL" && len(args) == 3 {
+		log.Printf("VALID REQUEST")
+		return "ATLR yesOrNo nodeId key"
+	} else if args[0] == "RFL" && len(args) == 3 {
+		log.Printf("VALID REQUEST")
+		return "RFLR yesOrNo"
+	} else if args[0] == "NODE" && len(args) == 1 {
+		log.Printf("VALID REQUEST")
+		return "NODER ipOfNewNode nodeId\n"
+	} else if args[0] == "UPDATE" && len(args) == 3 {
+		log.Printf("VALID REQUEST")
+		return "UPDATER yesOrNO"
+	} else {
+		log.Printf("NOT A VALID REQUEST")
+	}
+	return "NOT A VALID REQUEST"
 }
 
 

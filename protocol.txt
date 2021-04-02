@@ -41,11 +41,11 @@ Response that validates whether or not all the data was recieved
 STORER yesOrNo
 
 A response from node2 with node1's data if their key was valid
-RETRIEVE yesOrNo data (Node2 -> Node1)
+RETRIEVER yesOrNo data (Node2 -> Node1)
 
 A response from node 2 to node 1 on whether their data was removed or not
 REMOVER yesOrNo (Node2 -> Node1)
 
-***Please note we are not concerned that keys are being sent in plain text over the protocol given that the messaging is encrypted over TLS all protocol messages end in \n***   
+***Please note we are not concerned that keys are being sent in plain text over the protocol given that the messaging is encrypted over TLS***   
 
  
