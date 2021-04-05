@@ -5,6 +5,8 @@ package main
 import (
 	"crypto/rand"
 	"crypto/tls"
+	"math/big"
+	"os/exec"
 	"net"
 	"log"
 	"strings"
@@ -47,12 +49,12 @@ func handleConnection(c net.Conn) {
 	c.Write([]byte(resp))
 }
 
-func parseMsg (msg string) string {
+func parseMsg(msg string) string {
 	args := strings.Split(msg, " ")
 	
 	if args[0] == "ATL" && len(args) == 3 {
 		log.Printf("VALID REQUEST")
-		return "ATLR yesOrNo nodeId key"
+		return "ATLR yesOrNo " + genNodeId() + " " + genKey() 
 	} else if args[0] == "RFL" && len(args) == 3 {
 		log.Printf("VALID REQUEST")
 		return "RFLR yesOrNo"
@@ -66,6 +68,27 @@ func parseMsg (msg string) string {
 		log.Printf("NOT A VALID REQUEST")
 	}
 	return "NOT A VALID REQUEST"
+}
+
+//Please note this function uses a unix utility to generate a standard uuid
+//You can learn more about uuid's here: https://en.wikipedia.org/wiki/Universally_unique_identifier
+func genNodeId() string {
+	nodeId, err := exec.Command("uuidgen").Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return string(nodeId)
+}
+
+//crypto/rand implements a cryptographically secure random number generator so we can just use that 
+//Also the key should be aprox 64 bits (This might need to get bigger later)
+func genKey() string {
+	key, err := rand.Int(rand.Reader, big.NewInt(1000000000000000000))
+	if err != nil {
+		log.Fatal(err)
+	}
+	keyStr := key.String()
+	return keyStr
 }
 
 

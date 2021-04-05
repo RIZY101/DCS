@@ -34,7 +34,7 @@ func main() {
 	//conn.Write([]byte("ATL ipOfNode storageInGB"))
 	conn.Write([]byte(args[1]))
 	
-	buffer := make([]byte, 32)
+	buffer := make([]byte, 64)
 	conn.Read(buffer)
 	log.Printf(string(buffer))
 	parseMsg(string(buffer))
