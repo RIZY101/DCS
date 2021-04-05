@@ -3,6 +3,7 @@ package main
 //@Author: Richard Zins
 
 import (
+	"fmt"
 	"crypto/rand"
 	"crypto/tls"
 	"math/big"
@@ -10,9 +11,21 @@ import (
 	"net"
 	"log"
 	"strings"
+	//"strconv"
 )
 
+//Each nodeId is mapped to one of these structs
+//Also storageAvailable is in GB
+type NodeData struct {
+	ip string
+	key string
+	//TODO make this float64
+	storageAvailable string
+}
+
 func main() {
+
+	mapOfNodes := make(map[string]NodeData)
 
 	cert, err := tls.LoadX509KeyPair("server.pem", "server.key")
 
@@ -36,25 +49,33 @@ func main() {
 			log.Fatal(err)
 			continue
 		}
-		go handleConnection(conn)
+		go handleConnection(conn, mapOfNodes)
 	}
 }
 
-func handleConnection(c net.Conn) {
-	log.Printf("Client connected! Their addr is: " + c.RemoteAddr().String())
-	buffer := make([]byte, 32)
+func handleConnection(c net.Conn, mapOfNodes map[string]NodeData) {
+    ip := c.RemoteAddr().String()
+	log.Printf("Client connected! Their addr is: " + ip)
+	buffer := make([]byte, 64)
 	c.Read(buffer)
 	msg := string(buffer)
-	resp := parseMsg(msg)
+	resp := parseMsg(msg, ip, mapOfNodes)
 	c.Write([]byte(resp))
 }
 
-func parseMsg(msg string) string {
+func parseMsg(msg string, ip string, mapOfNodes map[string]NodeData) string {
 	args := strings.Split(msg, " ")
-	
+
+	//TODO: Edit protocol to not need IP address of client to be sent
 	if args[0] == "ATL" && len(args) == 3 {
+		nodeId := genNodeId()
+		key := genKey()
+		mapOfNodes[nodeId] = NodeData{ip, key, args[2]}
+		//TODO get rid of printing the struct after testing
+		n := mapOfNodes[nodeId]
 		log.Printf("VALID REQUEST")
-		return "ATLR yesOrNo " + genNodeId() + " " + genKey() 
+		fmt.Println(n)
+		return "ATLR yesOrNo " + nodeId + " " + key
 	} else if args[0] == "RFL" && len(args) == 3 {
 		log.Printf("VALID REQUEST")
 		return "RFLR yesOrNo"

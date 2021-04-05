@@ -18,7 +18,7 @@ Store allows a node to store data on another node as long as its online note thi
 STORE nodeId key2 data (Node1 -> Node2)
 
 A request from node1 to retrieve its data from node2
-RETRIEVE nodId key2 (Node1 -> Node2)
+RETRIEVE nodeId key2 (Node1 -> Node2)
 
 A request from node1 for node2 to delete all its data
 REMOVE nodeId key2 (Node1 -> Node2)
