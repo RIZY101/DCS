@@ -11,7 +11,8 @@ import (
 	"net"
 	"log"
 	"strings"
-	//"strconv"
+	"strconv"
+	//"unsafe"
 )
 
 //Each nodeId is mapped to one of these structs
@@ -19,8 +20,7 @@ import (
 type NodeData struct {
 	ip string
 	key string
-	//TODO make this float64
-	storageAvailable string
+	storageAvailable float64
 }
 
 func main() {
@@ -66,11 +66,15 @@ func handleConnection(c net.Conn, mapOfNodes map[string]NodeData) {
 func parseMsg(msg string, ip string, mapOfNodes map[string]NodeData) string {
 	args := strings.Split(msg, " ")
 
-	//TODO: Edit protocol to not need IP address of client to be sent
-	if args[0] == "ATL" && len(args) == 3 {
+	if args[0] == "ATL" && len(args) == 2 {
 		nodeId := genNodeId()
 		key := genKey()
-		mapOfNodes[nodeId] = NodeData{ip, key, args[2]}
+		storStr := strings.Trim(args[1], "\x00")
+		storage, err  := strconv.ParseFloat(storStr, 64)
+		if err != nil {
+			log.Fatal(err)
+		}
+		mapOfNodes[nodeId] = NodeData{ip, key, storage}
 		//TODO get rid of printing the struct after testing
 		n := mapOfNodes[nodeId]
 		log.Printf("VALID REQUEST")
