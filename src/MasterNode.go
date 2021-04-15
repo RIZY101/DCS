@@ -12,7 +12,6 @@ import (
 	"log"
 	"strings"
 	"strconv"
-	//"unsafe"
 )
 
 //Each nodeId is mapped to one of these structs
@@ -23,9 +22,10 @@ type NodeData struct {
 	storageAvailable float64
 }
 
-func main() {
+//Global variables are bad dont use them...
+var mapOfNodes map[string]NodeData = make(map[string]NodeData)
 
-	mapOfNodes := make(map[string]NodeData)
+func main() {
 
 	cert, err := tls.LoadX509KeyPair("server.pem", "server.key")
 
@@ -49,21 +49,21 @@ func main() {
 			log.Fatal(err)
 			continue
 		}
-		go handleConnection(conn, mapOfNodes)
+		go handleConnection(conn)
 	}
 }
 
-func handleConnection(c net.Conn, mapOfNodes map[string]NodeData) {
+func handleConnection(c net.Conn) {
     ip := c.RemoteAddr().String()
 	log.Printf("Client connected! Their addr is: " + ip)
 	buffer := make([]byte, 64)
 	c.Read(buffer)
 	msg := string(buffer)
-	resp := parseMsg(msg, ip, mapOfNodes)
+	resp := parseMsg(msg, ip)
 	c.Write([]byte(resp))
 }
 
-func parseMsg(msg string, ip string, mapOfNodes map[string]NodeData) string {
+func parseMsg(msg string, ip string) string {
 	args := strings.Split(msg, " ")
 
 	if args[0] == "ATL" && len(args) == 2 {
@@ -74,15 +74,26 @@ func parseMsg(msg string, ip string, mapOfNodes map[string]NodeData) string {
 		if err != nil {
 			log.Fatal(err)
 		}
+		//TODO Fix race condition here
 		mapOfNodes[nodeId] = NodeData{ip, key, storage}
 		//TODO get rid of printing the struct after testing
 		n := mapOfNodes[nodeId]
 		log.Printf("VALID REQUEST")
 		fmt.Println(n)
-		return "ATLR yesOrNo " + nodeId + " " + key
+		//Right now this will make a new nodeId and always allow them to join even if the IP is already another nodeID
+		return "ATLR yes " + nodeId + " " + key
 	} else if args[0] == "RFL" && len(args) == 3 {
 		log.Printf("VALID REQUEST")
-		return "RFLR yesOrNo"
+		//TODO Remove these Prints after testing
+		//TODO Fix race condition here
+		fmt.Println(args[1])
+		fmt.Println(mapOfNodes[args[1]].key)
+		fmt.Println(strings.Trim(args[2], "\x00"))
+		if mapOfNodes[args[1]].ip != "" && strings.Trim(args[2], "\x00") == mapOfNodes[args[1]].key {
+			delete(mapOfNodes, args[1])
+			return "RFLR yes"
+		}
+		return "RFLR No"
 	} else if args[0] == "NODE" && len(args) == 1 {
 		log.Printf("VALID REQUEST")
 		return "NODER ipOfNewNode nodeId\n"
