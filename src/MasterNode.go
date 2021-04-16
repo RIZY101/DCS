@@ -72,6 +72,7 @@ func parseMsg(msg string, ip string) string {
 
 	if args[0] == "ATL" && len(args) == 2 {
 		nodeId := strings.Trim(genNodeId(), " ")
+		nodeId = strings.Trim(nodeId, "\x0a")
 		key := genKey()
 		storStr := strings.Trim(args[1], "\x00")
 		storage, err  := strconv.ParseFloat(storStr, 64)
@@ -84,22 +85,6 @@ func parseMsg(msg string, ip string) string {
 		return "ATLR yes " + nodeId + " " + key
 	} else if args[0] == "RFL" && len(args) == 3 {
 		log.Printf("VALID REQUEST")
-		//TODO Remove these Prints after testing
-		//TODO Fix problem here
-		fmt.Println(args[1])
-		fmt.Println(strings.Trim(args[2], "\x00"))
-		//Iterates over all keys and values in a map
-		for k, v := range mapOfNodes {
-			fmt.Println(k)
-			fmt.Println(v) 
-			if k == args[1] {
-				fmt.Println("SAME STRING")
-			} else {
-				fmt.Println("NOT THE SAME STRING")
-			}
-			//TODO Compare hex formats of k and args[1] and see what is different about them
-			//fmt.Printf("key[%s] value[%s]\n", str, v)
-		}
 		if mapOfNodes[args[1]].ip != "" && strings.Trim(args[2], "\x00") == mapOfNodes[args[1]].key {
 			delete(mapOfNodes, args[1])
 			return "RFLR yes"
@@ -136,6 +121,13 @@ func genKey() string {
 	}
 	keyStr := key.String()
 	return keyStr
+}
+
+func printMap() {
+	//Iterates over all keys and values in a map
+	for k, v := range mapOfNodes {
+		fmt.Printf("key[%s] value[%s]\n", k, v)
+	}
 }
 
 
