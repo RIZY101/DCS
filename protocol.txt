@@ -9,7 +9,7 @@ Remove from list removes the node from the master nodes list of nodes
 RFL nodeId key (Node -> MasterNode)
 
 Node allows the node to ask the master node for a node that can store its data
-NODE (Node -> MasterNode)
+NODE storageNeedInGB(Node -> MasterNode)
 
 Updated allows the node to update their IP in the list on the master node because ISP's are lame and dont give us static IPV6's yet
 UPDATE nodeId key (Node -> MasterNode)

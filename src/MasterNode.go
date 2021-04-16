@@ -81,23 +81,43 @@ func parseMsg(msg string, ip string) string {
 		}
 		mapOfNodes[nodeId] = NodeData{ip, key, storage}
 		log.Printf("VALID REQUEST")
+		printMap()
 		//Right now this will make a new nodeId and always allow them to join even if the IP is already another nodeID
 		return "ATLR yes " + nodeId + " " + key
 	} else if args[0] == "RFL" && len(args) == 3 {
 		log.Printf("VALID REQUEST")
 		if mapOfNodes[args[1]].ip != "" && strings.Trim(args[2], "\x00") == mapOfNodes[args[1]].key {
 			delete(mapOfNodes, args[1])
+			printMap()
 			return "RFLR yes"
 		}
 		return "RFLR No"
-	} else if args[0] == "NODE" && len(args) == 1 {
+	} else if args[0] == "NODE" && len(args) == 2 {
+		storStr := strings.Trim(args[1], "\x00")
+		storageNeeded, err := strconv.ParseFloat(storStr, 64)
+		if err != nil {
+			log.Fatal(err)
+		}
+		ipOfNode, nodeId := getRandomNode(storageNeeded)
+		//Here I decrease the amount of avaialble storage that node has
+		newData := NodeData{ipOfNode, nodeId, mapOfNodes[nodeId].storageAvailable - storageNeeded}
+		mapOfNodes[nodeId] = newData
 		log.Printf("VALID REQUEST")
-		return "NODER ipOfNewNode nodeId\n"
+		printMap()
+		return "NODER " + ipOfNode + " " + nodeId
 	} else if args[0] == "UPDATE" && len(args) == 3 {
 		log.Printf("VALID REQUEST")
-		return "UPDATER yesOrNO"
+		if ip != mapOfNodes[args[1]].ip && args[2] == mapOfNodes[args[1]].key {
+			newData := NodeData{ip, mapOfNodes[args[1]].key, mapOfNodes[args[1]].storageAvailable}
+			mapOfNodes[args[1]] = newData
+			printMap()
+			return "UPDATER yes"
+		}
+		printMap()
+		return "UPDATER no"
 	} else {
 		log.Printf("NOT A VALID REQUEST")
+		printMap()
 	}
 	return "NOT A VALID REQUEST"
 }
@@ -123,6 +143,35 @@ func genKey() string {
 	return keyStr
 }
 
+//TODO Adapt this function so that it cant return itself but I must do this after I set up testing multiple clients at once
+//Only use this is in a mutex safe place
+func getRandomNode(storage float64) (string, string) {
+	var key string
+	var node NodeData
+	notFound := true
+	for notFound {
+		key, node = getNode()
+		if node.storageAvailable > storage {
+			notFound = false
+		}
+	}
+    return node.ip, key
+}
+
+////Only use this is in a mutex safe place
+func getNode() (string, NodeData) {
+	var key string
+	var node NodeData
+	//This is only a pseduo random solution
+	for k, v := range mapOfNodes {
+		node = v
+		key = k
+		break
+	}
+	return key, node
+}
+
+//Only use this is in a mutex safe place
 func printMap() {
 	//Iterates over all keys and values in a map
 	for k, v := range mapOfNodes {
