@@ -68,6 +68,7 @@ func handleConnection(c net.Conn) {
 }
 
 func parseMsg(msg string, ip string) string {
+	//TODO Implement parsing for check request
 	args := strings.Split(msg, " ")
 
 	if args[0] == "ATL" && len(args) == 2 {
@@ -88,9 +89,9 @@ func parseMsg(msg string, ip string) string {
 		log.Printf("VALID REQUEST")
 		if mapOfNodes[args[1]].ip != "" && strings.Trim(args[2], "\x00") == mapOfNodes[args[1]].key {
 			delete(mapOfNodes, args[1])
-			printMap()
 			return "RFLR yes"
 		}
+		printMap()
 		return "RFLR No"
 	} else if args[0] == "NODE" && len(args) == 2 {
 		storStr := strings.Trim(args[1], "\x00")
@@ -178,5 +179,3 @@ func printMap() {
 		fmt.Printf("key[%s] value[%s]\n", k, v)
 	}
 }
-
-

@@ -14,6 +14,9 @@ NODE storageNeedInGB(Node -> MasterNode)
 Updated allows the node to update their IP in the list on the master node because ISP's are lame and dont give us static IPV6's yet
 UPDATE nodeId key (Node -> MasterNode)
 
+Checks the master node to see if an ip was updated
+CHECK nodeId (Node -> MasterNode)
+
 Store allows a node to store data on another node as long as its online note this key is different from the key given by masternode otherwise this new node could update the other nodes IP which is not good
 STORE nodeId key2 data (Node1 -> Node2)
 
@@ -38,13 +41,16 @@ Response that confirms if the nodes IP was updated
 UPDATER yesOrNO (MasterNode -> Node)
 
 Response that validates whether or not all the data was recieved
-STORER yesOrNo
+STORER yesOrNo (Node2 -> Node1)
 
 A response from node2 with node1's data if their key was valid
 RETRIEVER yesOrNo data (Node2 -> Node1)
 
 A response from node 2 to node 1 on whether their data was removed or not
 REMOVER yesOrNo (Node2 -> Node1)
+
+Response fro Check the master node to see if an ip was updated
+CHECKR nodeId (MasterNode -> Node)
 
 ***Please note we are not concerned that keys are being sent in plain text over the protocol given that the messaging is encrypted over TLS***   
 
