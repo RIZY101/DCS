@@ -15,7 +15,7 @@ Updated allows the node to update their IP in the list on the master node becaus
 UPDATE nodeId key (Node -> MasterNode)
 
 Checks the master node to see if an ip was updated
-CHECK nodeId (Node -> MasterNode)
+CHECK nodeId oldIp(Node -> MasterNode)
 
 Store allows a node to store data on another node as long as its online note this key is different from the key given by masternode otherwise this new node could update the other nodes IP which is not good
 STORE nodeId key2 data (Node1 -> Node2)
@@ -50,7 +50,7 @@ A response from node 2 to node 1 on whether their data was removed or not
 REMOVER yesOrNo (Node2 -> Node1)
 
 Response fro Check the master node to see if an ip was updated
-CHECKR nodeId (MasterNode -> Node)
+CHECKR yesOrNo ip (MasterNode -> Node) ***Returns 0.0.0.0 if the ip didnt change for parsing ***
 
 ***Please note we are not concerned that keys are being sent in plain text over the protocol given that the messaging is encrypted over TLS***   
 

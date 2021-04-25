@@ -116,6 +116,14 @@ func parseMsg(msg string, ip string) string {
 		}
 		printMap()
 		return "UPDATER no"
+	} else if args[0] == "CHECK" && len(args) == 3 {
+			log.Printf("VALID REQUEST")
+			if strings.Trim(args[2], "\x00") != mapOfNodes[args[1]].ip {
+				printMap()
+				return "CHECKR yes " + mapOfNodes[args[1]].ip
+			}
+			printMap()
+			return "CHECKR no 0.0.0.0"
 	} else {
 		log.Printf("NOT A VALID REQUEST")
 		printMap()

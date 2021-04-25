@@ -115,6 +115,15 @@ func parseMsg (msg string) {
 			log.Printf("Your IP did not change or you gave a bad NodeId or Key\n")
 		}
 		log.Printf("VALID RESPONSE")
+	} else if args[0] == "CHECKR" && len(args) == 3 {
+		//TODO Implement correct fileName and NodeId later
+		if args[1] == "no" {
+			log.Printf("No change in the IP address")
+		} else {
+			mapOfYourData["TestFileName"] = Node{args[2], "TestNodeId"}
+			log.Printf("The IP address changed")
+		}
+		printMap()
 	} else if args[0] == "STORER" && len(args) == 2 {
 		//TODO if no maybe retransmit
 		log.Printf("VALID RESPONSE")
