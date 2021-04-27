@@ -3,55 +3,140 @@ Request protocol messages will always recieve a response protocol message. Respo
 Requests:
 
 Add to list adds a client to the master nodes list of nodes
-ATL storageInGB (Node -> MasterNode)
+ATL storageInGB (LNode -> MasterNode)
 
 Remove from list removes the node from the master nodes list of nodes
-RFL nodeId key (Node -> MasterNode)
+RFL nodeId key (LNode -> MasterNode)
 
 Node allows the node to ask the master node for a node that can store its data
-NODE storageNeedInGB(Node -> MasterNode)
+NODE storageNeedInGB(CNode -> MasterNode)
 
 Updated allows the node to update their IP in the list on the master node because ISP's are lame and dont give us static IPV6's yet
-UPDATE nodeId key (Node -> MasterNode)
+UPDATE nodeId key (LNode -> MasterNode)
 
 Checks the master node to see if an ip was updated
-CHECK nodeId oldIp(Node -> MasterNode)
+CHECK nodeId oldIp(CNode -> MasterNode)
 
 Store allows a node to store data on another node as long as its online note this key is different from the key given by masternode otherwise this new node could update the other nodes IP which is not good
-STORE nodeId key2 dataSizeInBits (Node1 -> Node2)
+STORE nodeId key2 dataSizeInBits (CNode -> LNode)
 
 A request from node1 to retrieve its data from node2
-RETRIEVE nodeId key2 (Node1 -> Node2)
+RETRIEVE nodeId key2 (CNode -> LNode)
 
 A request from node1 for node2 to delete all its data
-REMOVE nodeId key2 (Node1 -> Node2)
+REMOVE nodeId key2 (CNode -> LNode)
 
 Responses:
 
 Confirmation that they were added to the list because certain IP's may be blacklisted and their nodeid plus a key so that they can update their ip in the future
-ATLR yesOrNo nodeId key (MasterNode -> Node)
+ATLR yesOrNo nodeId key (MasterNode -> LNode)
 
 A response for whether or not the master node removed the node from the list
-RFLR yesOrNo (MasterNode -> Node)
+RFLR yesOrNo (MasterNode -> LNode)
 
 Response from MasterNode containing the IP of the new Node the requester should store their data at
-NODER ipOfNewNode nodeId (MasterNode -> Node)
+NODER ipOfNewNode nodeId (MasterNode -> CNode)
 
 Response that confirms if the nodes IP was updated
-UPDATER yesOrNO (MasterNode -> Node)
+UPDATER yesOrNO (MasterNode -> LNode)
 
 Response that validates whether or not its ready for all the data 
-STORER yesOrNo (Node2 -> Node1)
+STORER yesOrNo (LNode -> CNode)
 
 A response from node2 with node1's data if their key was valid
-RETRIEVER yesOrNo dataSizeInBits (Node2 -> Node1)
+RETRIEVER yesOrNo dataSizeInBits (LNode -> CNode)
 
 A response from node 2 to node 1 on whether their data was removed or not
-REMOVER yesOrNo (Node2 -> Node1)
+REMOVER yesOrNo (LNode -> CNode)
 
 Response fro Check the master node to see if an ip was updated
-CHECKR yesOrNo ip (MasterNode -> Node) ***Returns 0.0.0.0 if the ip didnt change for parsing ***
+CHECKR yesOrNo ip (MasterNode -> CNode) ***Returns 0.0.0.0 if the ip didnt change for parsing ***
 
 ***Please note we are not concerned that keys are being sent in plain text over the protocol given that the messaging is encrypted over TLS***   
 
- 
+func parseMsg (msg string) (string, int) {
+	args := strings.Split(msg, " ")
+	
+	if args[0] == "STORE" && len(args) == 4 {
+	    //TODO***This will need lots more work with data path and data tranfer***
+	    log.Printf("VALID REQUEST")
+	    mapOfData[args[1]] = Data{args[2], "data/" + args[1]}
+		printMap2()
+		sizeF := strings.Trim(args[3], "\x00")
+		size, err := strconv.Atoi(sizeF)
+		if err != nil {
+			log.Fatal(err)
+		}
+		return "STORER yes", size
+		//Send back STORER yesOrNo
+	} else if args[0] == "RETRIEVE" && len(args) == 3 {
+		log.Printf("VALID REQUEST")
+		nodeKey := strings.Trim(args[2], "\x00")
+		if mapOfData[args[1]].key == nodeKey {
+			printMap2()
+			//TODO Add in real size of data to expect back later 
+			return "RETRIEVER yes dataSize", 0
+		}
+		return "RETRIEVER no 0", 0
+	} else if args[0] == "REMOVE" && len(args) == 3 {
+	 	log.Printf("VALID REQUEST")
+	 	nodeKey := strings.Trim(args[2], "\x00")
+		if mapOfData[args[1]].key == nodeKey {
+			delete(mapOfData, args[1])
+			printMap2()
+			//TODO Add delete file on filesystem
+			return "REMOVER yes", 0
+		}
+		return "REMOVER no", 0
+	} else if args[0] == "ATLR" && len(args) == 4 {
+		if args[1] == "no" {
+			log.Printf("Failed to add you to the network. Your IP may be blacklisted...\n")
+		} else {
+			NodeId = args[2]
+			Key = args[3]
+		}
+		printGlobals()
+		log.Printf("VALID RESPONSE")
+	} else if args[0] == "RFLR" && len(args) == 2 { 
+		if args[1] == "no" {
+			log.Printf("Failed to remove you from the network. Maybe the key you sent was wrong\n")
+		} else {
+			log.Printf("You were removed from the network\n")
+		}
+		printGlobals()
+		log.Printf("VALID RESPONSE")
+	} else if args[0] == "NODER" && len(args) == 3 {
+		//TODO implment adding correct file name later
+		mapOfYourData["TestFileName"] = Node{args[1], args[2]}
+		log.Printf("VALID RESPONSE")
+		printMap()
+	} else if args[0] == "UPDATER" && len(args) == 2 {
+		if args[1] == "yes" {
+			log.Printf("Your IP was updated on the MasterNode\n")
+		} else {
+			log.Printf("Your IP did not change or you gave a bad NodeId or Key\n")
+		}
+		log.Printf("VALID RESPONSE")
+	} else if args[0] == "CHECKR" && len(args) == 3 {
+		//TODO Implement correct fileName and NodeId later
+		if args[1] == "no" {
+			log.Printf("No change in the IP address")
+		} else {
+			mapOfYourData["TestFileName"] = Node{args[2], "TestNodeId"}
+			log.Printf("The IP address changed")
+		}
+		printMap()
+	} else if args[0] == "STORER" && len(args) == 2 {
+		//TODO if no maybe retransmit
+		log.Printf("VALID RESPONSE")
+	} else if args[0] == "RETRIEVER" && len(args) == 3 {
+		//TODO if no tell the user maybe their key was invalid
+		log.Printf("VALID RESPONSE")
+	} else if args[0] == "REMOVER" && len(args) == 2 {
+		//TODO If no tell user maybe key was wrong
+		log.Printf("VALID RESPONSE")
+	} else {
+		log.Printf("NOT A VALID REQUEST OR RESPONSE")
+	}
+	return "TEST RESPONSE", 0
+}

@@ -61,6 +61,7 @@ func handleConnection(c net.Conn) {
 	buffer := make([]byte, 64)
 	c.Read(buffer)
 	msg := string(buffer)
+	log.Printf(msg)
 	mutex.Lock()
 	resp := parseMsg(msg, ip)
 	mutex.Unlock()
@@ -91,7 +92,7 @@ func parseMsg(msg string, ip string) string {
 			return "RFLR yes"
 		}
 		printMap()
-		return "RFLR No"
+		return "RFLR no"
 	} else if args[0] == "NODE" && len(args) == 2 {
 		storStr := strings.Trim(args[1], "\x00")
 		storageNeeded, err := strconv.ParseFloat(storStr, 64)
