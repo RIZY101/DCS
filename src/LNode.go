@@ -64,7 +64,7 @@ func main() {
 	}
 	//6633 is node on the keypad 	
 	log.Printf("Node Client(TLS) up and listening on port 6633")
-	
+	go userInput()
 	for {
 		conn, err := listen.Accept()
 		if err != nil {
@@ -225,6 +225,14 @@ func genKey() string {
 	return keyStr
 }
 
+func userInput() {
+	fmt.Println("Type Commands Below")
+	for {
+		var str string
+		fmt.Scanln(&str)
+		fmt.Println("Input was " + str)
+	}
+}
 //TODO implement CHECKR
 //TODO Before running retrieve run update to make sure its at the same ip
 //TODO Remember to send a STORE after recieving a NODER
