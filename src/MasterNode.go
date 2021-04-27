@@ -68,7 +68,6 @@ func handleConnection(c net.Conn) {
 }
 
 func parseMsg(msg string, ip string) string {
-	//TODO Implement parsing for check request
 	args := strings.Split(msg, " ")
 
 	if args[0] == "ATL" && len(args) == 2 {

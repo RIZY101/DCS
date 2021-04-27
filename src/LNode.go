@@ -6,7 +6,7 @@ import (
 	"crypto/tls"
 	"log"
 	"strings"
-	"os"
+	//"os"
 	"fmt"
 	"crypto/rand"
 	"net"
@@ -48,36 +48,43 @@ func main() {
 	NodeId = ""
 	Key = ""
 	Key2 = genKey()
-	args := os.Args
+	//args := os.Args
 	//6633 is node on the keypad
     cert, err := tls.LoadX509KeyPair("client.pem", "client.key")
     if err != nil {
     	log.Fatal(err)
     }
 
-	ip := "localhost"
-	port := "6633"
-
-	log.Printf("Connecting to %s\n", ip)
-
-	config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
-	conn, err := tls.Dial("tcp", ip+":"+port, &config)
-
+	config := tls.Config{Certificates: []tls.Certificate{cert}, ClientAuth: tls.RequireAnyClientCert}
+	config.Rand = rand.Reader
+	     
+	listen, err := tls.Listen("tcp", "localhost:6633", &config)
 	if err != nil {
 		log.Fatal(err)
 	}
+	//6633 is node on the keypad 	
+	log.Printf("Node Client(TLS) up and listening on port 6633")
+	
+	for {
+		conn, err := listen.Accept()
+		if err != nil {
+			log.Fatal(err)
+			continue
+		}
+		go handleConnection(conn)
+	}
 
-	log.Printf("Connection established between %s and localhost.\n", conn.RemoteAddr().String()) 
+	//log.Printf("Connection established between %s and localhost.\n", conn.RemoteAddr().String()) 
 
 	//conn.Write([]byte("ATL ipOfNode storageInGB"))
-	conn.Write([]byte(args[1]))
-	buffer := make([]byte, 64)
-	conn.Read(buffer)
-	log.Printf(string(buffer))
-	parseMsg(string(buffer))
+	//conn.Write([]byte(args[1]))
+	//buffer := make([]byte, 64)
+	//conn.Read(buffer)
+	//log.Printf(string(buffer))
+	//parseMsg(string(buffer))
 	
-	defer conn.Close()
-	log.Printf("Connection Killed")    
+	//defer conn.Close()
+	//log.Printf("Connection Killed")    
 }
 
 func handleConnection(c net.Conn) {
@@ -102,9 +109,9 @@ func parseMsg (msg string) (string, int) {
 	args := strings.Split(msg, " ")
 	
 	if args[0] == "STORE" && len(args) == 4 {
-	    //TODO***This will need lots more work with data path***
+	    //TODO***This will need lots more work with data path and data tranfer***
+	    log.Printf("VALID REQUEST")
 	    mapOfData[args[1]] = Data{args[2], "data/" + args[1]}
-		log.Printf("VALID REQUEST")
 		printMap2()
 		sizeF := strings.Trim(args[3], "\x00")
 		size, err := strconv.Atoi(sizeF)
@@ -114,13 +121,24 @@ func parseMsg (msg string) (string, int) {
 		return "STORER yes", size
 		//Send back STORER yesOrNo
 	} else if args[0] == "RETRIEVE" && len(args) == 3 {
-		//TODO
 		log.Printf("VALID REQUEST")
-		//Send back RETRIEVER yesOrNo data
+		nodeKey := strings.Trim(args[2], "\x00")
+		if mapOfData[args[1]].key == nodeKey {
+			printMap2()
+			//TODO Add in real size of data to expect back later 
+			return "RETRIEVER yes dataSize", 0
+		}
+		return "RETRIEVER no 0", 0
 	} else if args[0] == "REMOVE" && len(args) == 3 {
-	 	//TODO
-		log.Printf("VALID REQUEST")
-		//Send back REMOVER yesOrNo
+	 	log.Printf("VALID REQUEST")
+	 	nodeKey := strings.Trim(args[2], "\x00")
+		if mapOfData[args[1]].key == nodeKey {
+			delete(mapOfData, args[1])
+			printMap2()
+			//TODO Add delete file on filesystem
+			return "REMOVER yes", 0
+		}
+		return "REMOVER no", 0
 	} else if args[0] == "ATLR" && len(args) == 4 {
 		if args[1] == "no" {
 			log.Printf("Failed to add you to the network. Your IP may be blacklisted...\n")
