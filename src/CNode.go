@@ -18,7 +18,8 @@ import (
 var NodeId string
 //Your key to give to the LNode storing your file
 var Key string
-
+var fileName string
+var currentNodeId string
 
 type Node struct {
 	ip string
@@ -31,7 +32,9 @@ var mapOfYourData map[string]Node = make(map[string]Node)
 
 
 func main() {
+	fileName = "test"
 	NodeId = ""
+	currentNodeId = ""
 	Key = genKey()
 	args := os.Args
 	//6633 is node on the keypad
@@ -69,7 +72,7 @@ func main() {
 		data := string(buffer2)
 		log.Printf(data)
 		pwd, _ := os.Getwd()
-		f, err := os.Create(pwd + "/data2/test")
+		f, err := os.Create(pwd + "/data2/" + fileName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -87,25 +90,22 @@ func parseMsg (msg string, conn net.Conn) int {
 	args := strings.Split(msg, " ")
 		//Send back STORER yesOrNo
 	if args[0] == "NODER" && len(args) == 3 {
-		//TODO implment adding correct file name later
 		str := strings.Split(args[1], ":")
 		ip := str[0]
-		mapOfYourData["TestFileName"] = Node{ip, args[2]}
+		mapOfYourData[fileName] = Node{ip, args[2]}
 		log.Printf("VALID RESPONSE")
 		printMap()
 	} else if args[0] == "CHECKR" && len(args) == 3 {
-		//TODO Implement correct fileName and NodeId later
 		if args[1] == "no" {
 			log.Printf("No change in the IP address")
 		} else {
 			str := strings.Split(args[2], ":")
 			ip := str[0]
-			mapOfYourData["TestFileName"] = Node{ip, "TestNodeId"}
+			mapOfYourData[fileName] = Node{ip, currentNodeId}
 			log.Printf("The IP address changed")
 		}
 		printMap()
 	} else if args[0] == "STORER" && len(args) == 2 {
-		//TODO Implement this so it does specific file not test every time
 		log.Printf("VALID RESPONSE")
 		str := strings.Trim(args[1], "\x00")
 		if str == "yes" {
@@ -113,13 +113,12 @@ func parseMsg (msg string, conn net.Conn) int {
 		} else {
 			log.Printf("LNode not ready for your data")
 		}
-		data, err := ioutil.ReadFile("test")
+		data, err := ioutil.ReadFile(fileName)
 		if err != nil {
 			log.Fatal(err)
 		}
-		conn.Write([]byte(data))
+		conn.Write(data)
 	} else if args[0] == "RETRIEVER" && len(args) == 3 {
-		//TODO if no tell the user maybe their key was invalid
 		log.Printf("VALID RESPONSE")
 		sizeF := strings.Trim(args[2], "\x00")
 		size, err := strconv.Atoi(sizeF)
@@ -128,7 +127,6 @@ func parseMsg (msg string, conn net.Conn) int {
 		}
 		return size
 	} else if args[0] == "REMOVER" && len(args) == 2 {
-		//TODO If no tell user maybe key was wrong
 		log.Printf("VALID RESPONSE")
 		str := strings.Trim(args[1], "\x00")
 		if str == "yes" {
@@ -168,3 +166,5 @@ func genKey() string {
 }
 
 //TODO Remember to send a STORE after recieving a NODER
+//TODO Fucntion to execute NODE and STORE at same time
+//TODO Functions for the rest of the rquests

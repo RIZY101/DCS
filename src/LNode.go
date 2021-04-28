@@ -20,6 +20,7 @@ var mutex sync.Mutex
 
 var NodeId string
 var Key string
+var currentNodeId string
 
 //Each nodeId is mapped to one of these structs
 //This is the data you store
@@ -38,6 +39,7 @@ var mapOfData map[string]Data = make(map[string]Data)
 func main() {
 	NodeId = ""
 	Key = ""
+	currentNodeId = ""
 	//args := os.Args
 	//6633 is node on the keypad and + 1 is 6634
     cert, err := tls.LoadX509KeyPair("client.pem", "client.key")
@@ -92,9 +94,8 @@ func handleConnection(c net.Conn) {
 		c.Read(buffer2)
 		data := string(buffer2)
 		log.Printf(data)
-		//TODO Implment this so it uses the data structure
 		pwd, _ := os.Getwd()
-		f, err := os.Create(pwd + "/data/test")
+		f, err := os.Create(pwd + "/data/" + currentNodeId)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -106,11 +107,11 @@ func handleConnection(c net.Conn) {
 	}
 	if size == -1 {
 		pwd, _ := os.Getwd()
-		data, err := ioutil.ReadFile(pwd + "/data/test")
+		data, err := ioutil.ReadFile(pwd + "/data/" + currentNodeId)
 		if err != nil {
 			log.Fatal(err)
 		}
-		c.Write([]byte(data))
+		c.Write(data)
 	}
 }
 
@@ -118,7 +119,6 @@ func parseMsg (msg string) (string, int) {
 	args := strings.Split(msg, " ")
 	
 	if args[0] == "STORE" && len(args) == 4 {
-	    //TODO***This will need lots more work with data path and data tranfer***
 	    log.Printf("VALID REQUEST")
 	    mapOfData[args[1]] = Data{args[2], "/data/" + args[1]}
 		printMap()
@@ -127,6 +127,7 @@ func parseMsg (msg string) (string, int) {
 		if err != nil {
 			log.Fatal(err)
 		}
+		currentNodeId = args[1]
 		return "STORER yes", size
 		//Send back STORER yesOrNo
 	} else if args[0] == "RETRIEVE" && len(args) == 3 {
@@ -135,7 +136,7 @@ func parseMsg (msg string) (string, int) {
 		if mapOfData[args[1]].key == nodeKey {
 			printMap()
 			pwd, _ := os.Getwd()
-			fi, err := os.Stat(pwd + "/data/test")
+			fi, err := os.Stat(pwd + "/data/" + args[1])
 			if err != nil {
 			    log.Fatal(err)
 			}
