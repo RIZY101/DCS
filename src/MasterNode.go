@@ -80,7 +80,9 @@ func parseMsg(msg string, ip string) string {
 		if err != nil {
 			log.Fatal(err)
 		}
-		mapOfNodes[nodeId] = NodeData{ip, key, storage}
+		str := strings.Split(ip, ":")
+		ipStr := str[0]
+		mapOfNodes[nodeId] = NodeData{ipStr, key, storage}
 		log.Printf("VALID REQUEST")
 		printMap()
 		//Right now this will make a new nodeId and always allow them to join even if the IP is already another nodeID

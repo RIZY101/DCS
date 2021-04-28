@@ -18,7 +18,7 @@ Checks the master node to see if an ip was updated
 CHECK nodeId oldIp(CNode -> MasterNode)
 
 Store allows a node to store data on another node as long as its online note this key is different from the key given by masternode otherwise this new node could update the other nodes IP which is not good
-STORE nodeId key2 dataSizeInBits (CNode -> LNode)
+STORE nodeId key2 dataSizeInBytes (CNode -> LNode)
 
 A request from node1 to retrieve its data from node2
 RETRIEVE nodeId key2 (CNode -> LNode)
@@ -44,7 +44,7 @@ Response that validates whether or not its ready for all the data
 STORER yesOrNo (LNode -> CNode)
 
 A response from node2 with node1's data if their key was valid
-RETRIEVER yesOrNo dataSizeInBits (LNode -> CNode)
+RETRIEVER yesOrNo dataSizeInBytes (LNode -> CNode)
 
 A response from node 2 to node 1 on whether their data was removed or not
 REMOVER yesOrNo (LNode -> CNode)

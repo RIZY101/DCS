@@ -14,6 +14,7 @@ import (
 	"sync"
 	//"math/big"
 	"bufio"
+	"io/ioutil"
 )
 var mutex sync.Mutex
 
@@ -87,10 +88,29 @@ func handleConnection(c net.Conn) {
 	mutex.Unlock()
 	c.Write([]byte(resp))
 	if size > 0 {
-		buffer := make([]byte, size)
-		c.Read(buffer)
-		data := string(buffer)
+		buffer2 := make([]byte, size)
+		c.Read(buffer2)
+		data := string(buffer2)
 		log.Printf(data)
+		//TODO Implment this so it uses the data structure
+		pwd, _ := os.Getwd()
+		f, err := os.Create(pwd + "/data/test")
+		if err != nil {
+			log.Fatal(err)
+		}
+		num, err := f.Write(buffer2)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Wrote %d bytes", num)
+	}
+	if size == -1 {
+		pwd, _ := os.Getwd()
+		data, err := ioutil.ReadFile(pwd + "/data/test")
+		if err != nil {
+			log.Fatal(err)
+		}
+		c.Write([]byte(data))
 	}
 }
 
@@ -100,7 +120,7 @@ func parseMsg (msg string) (string, int) {
 	if args[0] == "STORE" && len(args) == 4 {
 	    //TODO***This will need lots more work with data path and data tranfer***
 	    log.Printf("VALID REQUEST")
-	    mapOfData[args[1]] = Data{args[2], "data/" + args[1]}
+	    mapOfData[args[1]] = Data{args[2], "/data/" + args[1]}
 		printMap()
 		sizeF := strings.Trim(args[3], "\x00")
 		size, err := strconv.Atoi(sizeF)
@@ -114,8 +134,14 @@ func parseMsg (msg string) (string, int) {
 		nodeKey := strings.Trim(args[2], "\x00")
 		if mapOfData[args[1]].key == nodeKey {
 			printMap()
-			//TODO Add in real size of data to expect back later 
-			return "RETRIEVER yes dataSize", 0
+			pwd, _ := os.Getwd()
+			fi, err := os.Stat(pwd + "/data/test")
+			if err != nil {
+			    log.Fatal(err)
+			}
+			size := fi.Size()
+			sizeStr := strconv.FormatInt(size, 10)
+			return "RETRIEVER yes " + sizeStr, -1
 		}
 		return "RETRIEVER no 0", 0
 	} else if args[0] == "REMOVE" && len(args) == 3 {
