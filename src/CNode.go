@@ -43,7 +43,7 @@ func main() {
     fmt.Println("Welcome to the DCS Client CLI!\nPlease type HELP for a list of commands.")
     reader := bufio.NewReader(os.Stdin)
     for {
-    	fmt.Println("> ")
+    	fmt.Printf("> ")
     	text, _ := reader.ReadString('\n')
     	// convert CRLF to LF
     	text = strings.Replace(text, "\n", "", -1)
@@ -157,8 +157,6 @@ func store() {
 	ip := "localhost"
 	//For MNode
 	port := "6633"
-	//For LNode
-	//port := "6634"
 	log.Printf("Connecting to %s\n", ip)
 	config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 	conn, err := tls.Dial("tcp", ip+":"+port, &config)
@@ -179,6 +177,7 @@ func store() {
 
 	//TODO Make it based off struct later
 	//ip = 0
+	//For LNode
 	port = "6634"
 	conn, err = tls.Dial("tcp", ip+":"+port, &config)
 	if err != nil {
@@ -189,13 +188,54 @@ func store() {
 	conn.Read(buffer)
 	log.Printf(string(buffer))
 	size = parseMsg(string(buffer), conn)
-	log.Printf("%d",size)
+	log.Printf("%d", size)
 	defer conn.Close()
 	log.Printf("Connection to Node Killed")
 }
 
 func retrieve() {
-	
+	//Conn setup
+	//6633 is node on the keypad
+	cert, err := tls.LoadX509KeyPair("client.pem", "client.key")
+	if err != nil {
+		log.Fatal(err)
+	}
+	ip := "localhost"
+	//For LNode
+	port := "6634"
+	log.Printf("Connecting to %s\n", ip)
+	config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+	conn, err := tls.Dial("tcp", ip+":"+port, &config)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("Connection established between %s and localhost.\n", conn.RemoteAddr().String())
+	//Ask MasterNode for new Node
+	//TODO Make the storage needed what the file size we are trying to store is
+	conn.Write([]byte("RETRIEVE " + NodeId + " " + Key))
+	buffer := make([]byte, 64)
+	conn.Read(buffer)
+	log.Printf(string(buffer))
+	size := parseMsg(string(buffer), conn)
+	if size > 0 {
+		buffer2 := make([]byte, size)
+		conn.Read(buffer2)
+		//TODO Remove these line bellow after testing
+		//data := string(buffer2)
+		//log.Printf("DATA: " + data)
+		pwd, _ := os.Getwd()
+		f, err := os.Create(pwd + "/data2/" + fileName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		num, err := f.Write(buffer2)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("Wrote %d bytes", num)
+	}
+	defer conn.Close()
+	log.Printf("Connection to Node Killed")
 }
 
 func files() {
