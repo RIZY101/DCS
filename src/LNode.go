@@ -92,8 +92,10 @@ func handleConnection(c net.Conn) {
 	if size > 0 {
 		buffer2 := make([]byte, size)
 		c.Read(buffer2)
-		data := string(buffer2)
-		log.Printf(data)
+		log.Printf("%d", size)
+		//TODO Get rid of lines bellow after testing because printing string data of png messes up cli
+		//data := string(buffer2)
+		//log.Printf(data)
 		pwd, _ := os.Getwd()
 		f, err := os.Create(pwd + "/data/" + currentNodeId)
 		if err != nil {

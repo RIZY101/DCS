@@ -32,7 +32,7 @@ var mapOfYourData map[string]Node = make(map[string]Node)
 
 
 func main() {
-	fileName = "test"
+	fileName = "test2"
 	NodeId = ""
 	currentNodeId = ""
 	Key = genKey()
@@ -69,8 +69,9 @@ func main() {
 	if size > 0 {
 		buffer2 := make([]byte, size)
 		conn.Read(buffer2)
-		data := string(buffer2)
-		log.Printf(data)
+		//TODO Remove these line bellow after testing
+		//data := string(buffer2)
+		//log.Printf(data)
 		pwd, _ := os.Getwd()
 		f, err := os.Create(pwd + "/data2/" + fileName)
 		if err != nil {
