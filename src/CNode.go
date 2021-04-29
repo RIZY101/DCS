@@ -13,6 +13,7 @@ import (
 	"math/big"
 	"io/ioutil"
 	"net"
+	"bufio"
 )
 
 var NodeId string
@@ -32,59 +33,48 @@ var mapOfYourData map[string]Node = make(map[string]Node)
 
 
 func main() {
-	fileName = "test2"
-	NodeId = ""
+	fileName = "test"
+	NodeId = "testNodeId"
 	currentNodeId = ""
 	Key = genKey()
-	args := os.Args
+	//args := os.Args
 	//6633 is node on the keypad
-    cert, err := tls.LoadX509KeyPair("client.pem", "client.key")
-    if err != nil {
-    	log.Fatal(err)
-    }
-
-	ip := "localhost"
-	//For MNode
-	//port := "6633"
-	//For LNode
-	port := "6634"
-
-	log.Printf("Connecting to %s\n", ip)
-
-	config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
-	conn, err := tls.Dial("tcp", ip+":"+port, &config)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Printf("Connection established between %s and localhost.\n", conn.RemoteAddr().String()) 
+    
+    fmt.Println("Welcome to the DCS Client CLI!\nPlease type HELP for a list of commands.")
+    reader := bufio.NewReader(os.Stdin)
+    for {
+    	fmt.Println("> ")
+    	text, _ := reader.ReadString('\n')
+    	// convert CRLF to LF
+    	text = strings.Replace(text, "\n", "", -1)
+    	parseCmd(text)
+    } 
 
 	//conn.Write([]byte("ATL ipOfNode storageInGB"))
-	conn.Write([]byte(args[1]))
-	buffer := make([]byte, 64)
-	conn.Read(buffer)
-	log.Printf(string(buffer))
-	size := parseMsg(string(buffer), conn)
-	if size > 0 {
-		buffer2 := make([]byte, size)
-		conn.Read(buffer2)
+	//conn.Write([]byte(args[1]))
+	//buffer := make([]byte, 64)
+	//conn.Read(buffer)
+	//log.Printf(string(buffer))
+	//size := parseMsg(string(buffer), conn)
+	//if size > 0 {
+		//buffer2 := make([]byte, size)
+		//conn.Read(buffer2)
 		//TODO Remove these line bellow after testing
 		//data := string(buffer2)
 		//log.Printf(data)
-		pwd, _ := os.Getwd()
-		f, err := os.Create(pwd + "/data2/" + fileName)
-		if err != nil {
-			log.Fatal(err)
-		}
-		num, err := f.Write(buffer2)
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Printf("Wrote %d bytes", num)
-	}
-	defer conn.Close()
-	log.Printf("Connection Killed")    
+		//pwd, _ := os.Getwd()
+		//f, err := os.Create(pwd + "/data2/" + fileName)
+		//if err != nil {
+			//log.Fatal(err)
+		//}
+		//num, err := f.Write(buffer2)
+		//if err != nil {
+			//log.Fatal(err)
+		//}
+		//log.Printf("Wrote %d bytes", num)
+	//}
+	//defer conn.Close()
+	//log.Printf("Connection Killed")    
 }
 
 func parseMsg (msg string, conn net.Conn) int {
@@ -139,6 +129,81 @@ func parseMsg (msg string, conn net.Conn) int {
 		log.Printf("NOT A VALID REQUEST OR RESPONSE")
 	}
 	return 0
+}
+
+func parseCmd(cmd string) {
+	if cmd == "STORE" {
+		store()
+	} else if cmd == "RETRIEVE" {
+		retrieve()	
+	} else if cmd == "FILES" {
+		files()
+	} else if cmd == "MAP" {
+		mapp()
+	} else if cmd == "HELP" {
+		fmt.Println("STORE: Stores your file located in the upload folder on the network.\nRETRIEVE: Retrieves your file from where its store on the network and places it in the download folder.\nFILES: Lists all your files stored on the network.\nMAP: Shows the physical location of where all your files are stored on the network.\nHELP: Shows this list of commands.")
+	} else {
+		fmt.Println("Not a valid command! Please try using the HELP command to see all possible commands.")
+	}
+}
+
+func store() {
+	//Conn setup
+	//6633 is node on the keypad
+	cert, err := tls.LoadX509KeyPair("client.pem", "client.key")
+	if err != nil {
+		log.Fatal(err)
+	}
+	ip := "localhost"
+	//For MNode
+	port := "6633"
+	//For LNode
+	//port := "6634"
+	log.Printf("Connecting to %s\n", ip)
+	config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+	conn, err := tls.Dial("tcp", ip+":"+port, &config)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("Connection established between %s and localhost.\n", conn.RemoteAddr().String())
+	//Ask MasterNode for new Node
+	//TODO Make the storage needed what the file size we are trying to store is
+	conn.Write([]byte("NODE 0.1"))
+	buffer := make([]byte, 64)
+	conn.Read(buffer)
+	log.Printf(string(buffer))
+	size := parseMsg(string(buffer), conn)
+	log.Printf("%d",size)
+	defer conn.Close()
+	log.Printf("Connection to Master Node Killed")
+
+	//TODO Make it based off struct later
+	//ip = 0
+	port = "6634"
+	conn, err = tls.Dial("tcp", ip+":"+port, &config)
+	if err != nil {
+		log.Fatal(err)
+	}
+	conn.Write([]byte("STORE " + NodeId + " " + Key + " 58"))
+	buffer = make([]byte, 64)
+	conn.Read(buffer)
+	log.Printf(string(buffer))
+	size = parseMsg(string(buffer), conn)
+	log.Printf("%d",size)
+	defer conn.Close()
+	log.Printf("Connection to Node Killed")
+}
+
+func retrieve() {
+	
+}
+
+func files() {
+	
+}
+
+func mapp() {
+	
 }
 
 //Usef for testing only
