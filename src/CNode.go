@@ -211,7 +211,7 @@ func retrieve() {
 		buffer2 := make([]byte, size)
 		conn.Read(buffer2)
 		pwd, _ := os.Getwd()
-		f, err := os.Create(pwd + "/data2/" + fileName)
+		f, err := os.Create(pwd + "/" + fileName)
 		if err != nil {
 			log.Fatal(err)
 		}
