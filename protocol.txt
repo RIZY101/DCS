@@ -3,7 +3,7 @@ Request protocol messages will always recieve a response protocol message. Respo
 Requests:
 
 Add to list adds a client to the master nodes list of nodes
-ATL storageInGB (LNode -> MasterNode)
+ATL storageInBytes (LNode -> MasterNode)
 
 Remove from list removes the node from the master nodes list of nodes
 RFL nodeId key (LNode -> MasterNode)

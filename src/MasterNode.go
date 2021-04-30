@@ -58,7 +58,7 @@ func main() {
 func handleConnection(c net.Conn) {
     ip := c.RemoteAddr().String()
 	log.Printf("Client connected! Their addr is: " + ip)
-	buffer := make([]byte, 64)
+	buffer := make([]byte, 128)
 	c.Read(buffer)
 	msg := string(buffer)
 	log.Printf(msg)
