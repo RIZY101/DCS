@@ -189,7 +189,7 @@ func retrieve() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ip := "localhost"
+	ip := mapOfYourData[fileName].ip
 	//For LNode
 	port := "6634"
 	//log.Printf("Connecting to %s\n", ip)
@@ -230,7 +230,7 @@ func remove() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ip := "localhost"
+	ip := mapOfYourData[fileName].ip
 	//For LNode
 	port := "6634"
 	//log.Printf("Connecting to %s\n", ip)
@@ -251,6 +251,7 @@ func remove() {
 	defer conn.Close()
 	//log.Printf("Connection to Node Killed")
 	_ = size
+	delete(mapOfYourData, fileName)
 }
 
 func files() {
