@@ -49,7 +49,7 @@ func main() {
 	config := tls.Config{Certificates: []tls.Certificate{cert}, ClientAuth: tls.RequireAnyClientCert}
 	config.Rand = rand.Reader
 	     
-	listen, err := tls.Listen("tcp", "localhost:6634", &config)
+	listen, err := tls.Listen("tcp", "194.195.208.111:6634", &config)
 	if err != nil {
 		log.Fatal(err)
 	}

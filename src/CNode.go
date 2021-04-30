@@ -135,7 +135,7 @@ func store() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ip := "localhost"
+	ip := "192.168.254.87"
 	//For MNode
 	port := "6633"
 	//log.Printf("Connecting to %s\n", ip)
@@ -163,8 +163,7 @@ func store() {
 	//log.Printf("Connection to Master Node Killed")
 
 	//Ask Node to store your stuff there
-	//TODO Make it based off struct later
-	//ip = 0
+	ip = mapOfYourData[fileName].ip
 	//For LNode
 	port = "6634"
 	conn, err = tls.Dial("tcp", ip+":"+port, &config)
