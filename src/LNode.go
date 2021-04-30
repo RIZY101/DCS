@@ -40,7 +40,6 @@ func main() {
 	NodeId = ""
 	Key = ""
 	currentNodeId = ""
-	//args := os.Args
 	//6633 is node on the keypad and + 1 is 6634
     cert, err := tls.LoadX509KeyPair("client.pem", "client.key")
     if err != nil {
@@ -55,7 +54,7 @@ func main() {
 		log.Fatal(err)
 	}
 	//6633 is node on the keypad 	
-	log.Printf("Node Client(TLS) up and listening on port 6633")
+	log.Printf("Node (TLS) up and listening on port 6634")
 	go userInput()
 	for {
 		conn, err := listen.Accept()
@@ -73,6 +72,7 @@ func handleConnection(c net.Conn) {
 	buffer := make([]byte, 128)
 	c.Read(buffer)
 	msg := string(buffer)
+	log.Printf(msg)
 	mutex.Lock()
 	resp, size := parseMsg(msg)
 	mutex.Unlock()
@@ -106,7 +106,7 @@ func handleConnection(c net.Conn) {
 
 func parseMsg (msg string) (string, int) {
 	args := strings.Split(msg, " ")
-	log.Printf(msg)
+	
 	if args[0] == "STORE" && len(args) == 4 {
 	    log.Printf("VALID REQUEST")
 	    mapOfData[args[1]] = Data{args[2], "/data/" + args[1]}

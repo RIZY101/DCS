@@ -70,7 +70,7 @@ func handleConnection(c net.Conn) {
 
 func parseMsg(msg string, ip string) string {
 	args := strings.Split(msg, " ")
-
+	
 	if args[0] == "ATL" && len(args) == 2 {
 		nodeId := strings.Trim(genNodeId(), " ")
 		nodeId = strings.Trim(nodeId, "\x0a")
