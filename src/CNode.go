@@ -15,7 +15,7 @@ import (
 	"io/ioutil"
 	"net"
 	"bufio"
-	//"io"
+	"net/http"
 )
 
 var NodeId string
@@ -261,7 +261,22 @@ func files() {
 }
 
 func mapp() {
-	
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", "https://tools.keycdn.com/geo.json?host=47.148.35.249", nil)
+	if err != nil {
+			log.Fatal(err)
+	}
+	req.Header.Add("User-Agent", "keycdn-tools:https://47.148.35.249")
+	resp, err := client.Do(req) 
+	if err != nil {
+		log.Fatal(err)
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	json := string(body)
+	log.Printf(json)
 }
 
 //Usef for testing only
