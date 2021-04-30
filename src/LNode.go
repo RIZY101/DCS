@@ -211,7 +211,8 @@ func sendCmd(str string) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		ip := "localhost"
+		//MasterNode IP for demo
+		ip := "47.148.35.249"
 		port := "6633"
 		config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 		conn, err := tls.Dial("tcp", ip+":"+port, &config)
