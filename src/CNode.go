@@ -154,9 +154,10 @@ func store() {
 	fSize := info.Size()
 	sSize := strconv.FormatInt(fSize, 10)
 	conn.Write([]byte("NODE " + sSize))
+	log.Printf("SENDING: NODE " + sSize)
 	buffer := make([]byte, 64)
 	conn.Read(buffer)
-	log.Printf(string(buffer))
+	log.Printf("RECIEVED: " + (string(buffer)))
 	size := parseMsg(string(buffer), conn)
 	//log.Printf("%d",size)
 	defer conn.Close()
@@ -172,9 +173,10 @@ func store() {
 	}
 	writeStr := "STORE " + NodeId + " " + Key + " " + sSize
 	conn.Write([]byte(writeStr))
+	log.Printf("SNDING: " + writeStr)
 	buffer = make([]byte, 64)
 	conn.Read(buffer)
-	log.Printf(string(buffer))
+	log.Printf("RECIEVED: " + (string(buffer)))
 	size = parseMsg(string(buffer), conn)
 	//log.Printf("%d", size)
 	defer conn.Close()
@@ -202,9 +204,10 @@ func retrieve() {
 	
 	//Ask MasterNode for new Node
 	conn.Write([]byte("RETRIEVE " + NodeId + " " + Key))
+	log.Printf("SNDING: RETRIEVE "  + NodeId + " " + Key)
 	buffer := make([]byte, 64)
 	conn.Read(buffer)
-	log.Printf(string(buffer))
+	log.Printf("RECIEVED: " + (string(buffer)))
 	size := parseMsg(string(buffer), conn)
 	if size > 0 {
 		buffer2 := make([]byte, size)
@@ -243,9 +246,10 @@ func remove() {
 	
 	//Ask MasterNode for new Node
 	conn.Write([]byte("REMOVE " + NodeId + " " + Key))
+	log.Printf("SNDING: REMOVE "  + NodeId + " " + Key)
 	buffer := make([]byte, 64)
 	conn.Read(buffer)
-	log.Printf(string(buffer))
+	log.Printf("RECIEVED: " + (string(buffer)))
 	size := parseMsg(string(buffer), conn)
 	//log.Printf("%d", size)
 	defer conn.Close()
