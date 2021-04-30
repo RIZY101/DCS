@@ -119,10 +119,10 @@ func parseCmd(cmd string) {
 		remove()
 	} else if cmds[0] == "FILES" {
 		files()
-	} else if cmds[0] == "MAP" {
-		mapp()
+	} else if cmds[0] == "INFO" {
+		info()
 	} else if cmds[0] == "HELP" {
-		fmt.Println("STORE <filename>: Stores the file you specify on the network.\nRETRIEVE <filename>: Retrieves the file you specify from the network.\nREMOVE <filename>: Removes that file from the network.\nFILES: Lists all your files stored on the network.\nMAP: Shows the physical location of where all your files are stored on the network.\nHELP: Shows this list of commands.")
+		fmt.Println("STORE <filename>: Stores the file you specify on the network.\nRETRIEVE <filename>: Retrieves the file you specify from the network.\nREMOVE <filename>: Removes that file from the network.\nFILES: Lists all your files stored on the network.\nINFO: Shows information about the nodes that store your files on the network.\nHELP: Shows this list of commands.")
 	} else {
 		fmt.Println("Not a valid command! Please try using the HELP command to see all possible commands.")
 	}
@@ -264,7 +264,7 @@ func files() {
 	}
 }
 
-func mapp() {
+func info() {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", "https://tools.keycdn.com/geo.json?host=47.148.35.249", nil)
 	if err != nil {
@@ -280,7 +280,30 @@ func mapp() {
 		log.Fatal(err)
 	}
 	json := string(body)
-	log.Printf(json)
+	geo := strings.Index(json, "\"ge")
+	jsonM := json[geo:]
+	log.Printf("MasterNode Info:\n" + jsonM)
+	for k := range mapOfYourData {
+		log.Printf("Inside For Loop")
+		client := &http.Client{}
+		req, err := http.NewRequest("GET", "https://tools.keycdn.com/geo.json?host=" + mapOfYourData[k].ip, nil)
+		if err != nil {
+			log.Fatal(err)
+		}
+		req.Header.Add("User-Agent", "keycdn-tools:https://" + mapOfYourData[k].ip)
+		resp, err := client.Do(req) 
+		if err != nil {
+			log.Fatal(err)
+		}
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		json := string(body)
+		geo := strings.Index(json, "\"ge")
+		jsonM := json[geo:]
+		log.Printf(mapOfYourData[k].NodeId + " Info:\n" + jsonM)
+	}
 }
 
 //Usef for testing only
