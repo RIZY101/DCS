@@ -65,24 +65,12 @@ func main() {
 		}
 		go handleConnection(conn)
 	}
-
-	//log.Printf("Connection established between %s and localhost.\n", conn.RemoteAddr().String()) 
-
-	//conn.Write([]byte("ATL ipOfNode storageInGB"))
-	//conn.Write([]byte(args[1]))
-	//buffer := make([]byte, 64)
-	//conn.Read(buffer)
-	//log.Printf(string(buffer))
-	//parseMsg(string(buffer))
-	
-	//defer conn.Close()
-	//log.Printf("Connection Killed")    
 }
 
 func handleConnection(c net.Conn) {
     ip := c.RemoteAddr().String()
 	log.Printf("Client connected! Their addr is: " + ip)
-	buffer := make([]byte, 64)
+	buffer := make([]byte, 128)
 	c.Read(buffer)
 	msg := string(buffer)
 	mutex.Lock()
@@ -92,7 +80,6 @@ func handleConnection(c net.Conn) {
 	if size > 0 {
 		buffer2 := make([]byte, size)
 		c.Read(buffer2)
-		log.Printf("%d", size)
 		//TODO Get rid of lines bellow after testing because printing string data of png messes up cli
 		//data := string(buffer2)
 		//log.Printf(data)
@@ -119,18 +106,18 @@ func handleConnection(c net.Conn) {
 
 func parseMsg (msg string) (string, int) {
 	args := strings.Split(msg, " ")
-	
+	log.Printf(msg)
 	if args[0] == "STORE" && len(args) == 4 {
 	    log.Printf("VALID REQUEST")
 	    mapOfData[args[1]] = Data{args[2], "/data/" + args[1]}
 		printMap()
 		sizeF := strings.Trim(args[3], "\x00")
-		size, err := strconv.Atoi(sizeF)
+		size, err := strconv.ParseFloat(sizeF, 64)
 		if err != nil {
 			log.Fatal(err)
 		}
 		currentNodeId = args[1]
-		return "STORER yes", size
+		return "STORER yes", int(size)
 		//Send back STORER yesOrNo
 	} else if args[0] == "RETRIEVE" && len(args) == 3 {
 		log.Printf("VALID REQUEST")
@@ -153,7 +140,11 @@ func parseMsg (msg string) (string, int) {
 		if mapOfData[args[1]].key == nodeKey {
 			delete(mapOfData, args[1])
 			printMap()
-			//TODO Add delete file on filesystem
+			pwd, _ := os.Getwd()
+			err := os.Remove(pwd + "/data/" + args[1])
+			if err != nil {
+				log.Fatal(err)
+			}
 			return "REMOVER yes", 0
 		}
 		return "REMOVER no", 0

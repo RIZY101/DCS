@@ -9,7 +9,7 @@ Remove from list removes the node from the master nodes list of nodes
 RFL nodeId key (LNode -> MasterNode)
 
 Node allows the node to ask the master node for a node that can store its data
-NODE storageNeedInGB(CNode -> MasterNode)
+NODE storageNeedInBytes (CNode -> MasterNode)
 
 Updated allows the node to update their IP in the list on the master node because ISP's are lame and dont give us static IPV6's yet
 UPDATE nodeId key (LNode -> MasterNode)
@@ -20,10 +20,10 @@ CHECK nodeId oldIp(CNode -> MasterNode)
 Store allows a node to store data on another node as long as its online note this key is different from the key given by masternode otherwise this new node could update the other nodes IP which is not good
 STORE nodeId key2 dataSizeInBytes (CNode -> LNode)
 
-A request from node1 to retrieve its data from node2
+A request from CNode to retrieve its data from LNode
 RETRIEVE nodeId key2 (CNode -> LNode)
 
-A request from node1 for node2 to delete all its data
+A request from CNode for LNode to delete all its data
 REMOVE nodeId key2 (CNode -> LNode)
 
 Responses:
@@ -43,10 +43,10 @@ UPDATER yesOrNO (MasterNode -> LNode)
 Response that validates whether or not its ready for all the data 
 STORER yesOrNo (LNode -> CNode)
 
-A response from node2 with node1's data if their key was valid
+A response from LNode with CNode's data if their key was valid
 RETRIEVER yesOrNo dataSizeInBytes (LNode -> CNode)
 
-A response from node 2 to node 1 on whether their data was removed or not
+A response from LNode to CNode on whether their data was removed or not
 REMOVER yesOrNo (LNode -> CNode)
 
 Response fro Check the master node to see if an ip was updated

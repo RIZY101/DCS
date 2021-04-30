@@ -7,6 +7,7 @@ import (
 	"log"
 	"strings"
 	"os"
+	"os/exec"
 	"fmt"
 	"crypto/rand"
 	"strconv"
@@ -33,12 +34,11 @@ var mapOfYourData map[string]Node = make(map[string]Node)
 
 
 func main() {
-	fileName = "test"
-	NodeId = "testNodeId"
+	fileName = ""
+	NodeId = strings.Trim(genNodeId(), " ")
+	NodeId = strings.Trim(NodeId, "\x0a")
 	currentNodeId = ""
 	Key = genKey()
-	//args := os.Args
-	//6633 is node on the keypad
     
     fmt.Println("Welcome to the DCS Client CLI!\nPlease type HELP for a list of commands.")
     reader := bufio.NewReader(os.Stdin)
@@ -49,32 +49,6 @@ func main() {
     	text = strings.Replace(text, "\n", "", -1)
     	parseCmd(text)
     } 
-
-	//conn.Write([]byte("ATL ipOfNode storageInGB"))
-	//conn.Write([]byte(args[1]))
-	//buffer := make([]byte, 64)
-	//conn.Read(buffer)
-	//log.Printf(string(buffer))
-	//size := parseMsg(string(buffer), conn)
-	//if size > 0 {
-		//buffer2 := make([]byte, size)
-		//conn.Read(buffer2)
-		//TODO Remove these line bellow after testing
-		//data := string(buffer2)
-		//log.Printf(data)
-		//pwd, _ := os.Getwd()
-		//f, err := os.Create(pwd + "/data2/" + fileName)
-		//if err != nil {
-			//log.Fatal(err)
-		//}
-		//num, err := f.Write(buffer2)
-		//if err != nil {
-			//log.Fatal(err)
-		//}
-		//log.Printf("Wrote %d bytes", num)
-	//}
-	//defer conn.Close()
-	//log.Printf("Connection Killed")    
 }
 
 func parseMsg (msg string, conn net.Conn) int {
@@ -132,16 +106,22 @@ func parseMsg (msg string, conn net.Conn) int {
 }
 
 func parseCmd(cmd string) {
-	if cmd == "STORE" {
+	cmds := strings.Split(cmd, " ")
+	if cmds[0] == "STORE" {
+		fileName = cmds[1]
 		store()
-	} else if cmd == "RETRIEVE" {
+	} else if cmds[0] == "RETRIEVE" {
+		fileName = cmds[1]
 		retrieve()	
-	} else if cmd == "FILES" {
+	} else if cmds[0] == "REMOVE" {
+		fileName = cmds[1]
+		remove()
+	} else if cmds[0] == "FILES" {
 		files()
-	} else if cmd == "MAP" {
+	} else if cmds[0] == "MAP" {
 		mapp()
-	} else if cmd == "HELP" {
-		fmt.Println("STORE: Stores your file located in the upload folder on the network.\nRETRIEVE: Retrieves your file from where its store on the network and places it in the download folder.\nFILES: Lists all your files stored on the network.\nMAP: Shows the physical location of where all your files are stored on the network.\nHELP: Shows this list of commands.")
+	} else if cmds[0] == "HELP" {
+		fmt.Println("STORE <filename>: Stores your file located in the upload folder on the network.\nRETRIEVE <filename>: Retrieves your file from where its store on the network and places it in the download folder.\nREMOVE <filename>: Removes that file from the network.\nFILES: Lists all your files stored on the network.\nMAP: Shows the physical location of where all your files are stored on the network.\nHELP: Shows this list of commands.")
 	} else {
 		fmt.Println("Not a valid command! Please try using the HELP command to see all possible commands.")
 	}
@@ -164,9 +144,15 @@ func store() {
 		log.Fatal(err)
 	}
 	log.Printf("Connection established between %s and localhost.\n", conn.RemoteAddr().String())
+
 	//Ask MasterNode for new Node
-	//TODO Make the storage needed what the file size we are trying to store is
-	conn.Write([]byte("NODE 0.1"))
+	info, err := os.Stat(fileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fSize := info.Size()
+	sSize := strconv.FormatInt(fSize, 10)
+	conn.Write([]byte("NODE " + sSize))
 	buffer := make([]byte, 64)
 	conn.Read(buffer)
 	log.Printf(string(buffer))
@@ -175,6 +161,7 @@ func store() {
 	defer conn.Close()
 	log.Printf("Connection to Master Node Killed")
 
+	//Ask Node to store your stuff there
 	//TODO Make it based off struct later
 	//ip = 0
 	//For LNode
@@ -183,7 +170,8 @@ func store() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	conn.Write([]byte("STORE " + NodeId + " " + Key + " 58"))
+	writeStr := "STORE " + NodeId + " " + Key + " " + sSize
+	conn.Write([]byte(writeStr))
 	buffer = make([]byte, 64)
 	conn.Read(buffer)
 	log.Printf(string(buffer))
@@ -211,7 +199,6 @@ func retrieve() {
 	}
 	log.Printf("Connection established between %s and localhost.\n", conn.RemoteAddr().String())
 	//Ask MasterNode for new Node
-	//TODO Make the storage needed what the file size we are trying to store is
 	conn.Write([]byte("RETRIEVE " + NodeId + " " + Key))
 	buffer := make([]byte, 64)
 	conn.Read(buffer)
@@ -238,8 +225,37 @@ func retrieve() {
 	log.Printf("Connection to Node Killed")
 }
 
+func remove() {
+	//Conn setup
+	cert, err := tls.LoadX509KeyPair("client.pem", "client.key")
+	if err != nil {
+		log.Fatal(err)
+	}
+	ip := "localhost"
+	//For LNode
+	port := "6634"
+	log.Printf("Connecting to %s\n", ip)
+	config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+	conn, err := tls.Dial("tcp", ip+":"+port, &config)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("Connection established between %s and localhost.\n", conn.RemoteAddr().String())
+	//Ask MasterNode for new Node
+	conn.Write([]byte("REMOVE " + NodeId + " " + Key))
+	buffer := make([]byte, 64)
+	conn.Read(buffer)
+	log.Printf(string(buffer))
+	size := parseMsg(string(buffer), conn)
+	log.Printf("%d", size)
+	defer conn.Close()
+	log.Printf("Connection to Node Killed")
+}
+
 func files() {
-	
+	for k := range mapOfYourData {
+		fmt.Printf("%s\n", k)
+	}
 }
 
 func mapp() {
@@ -271,6 +287,12 @@ func genKey() string {
 	return keyStr
 }
 
-//TODO Remember to send a STORE after recieving a NODER
-//TODO Fucntion to execute NODE and STORE at same time
-//TODO Functions for the rest of the rquests
+//Please note this function uses a unix utility to generate a standard uuid
+//You can learn more about uuid's here: https://en.wikipedia.org/wiki/Universally_unique_identifier
+func genNodeId() string {
+	nodeId, err := exec.Command("uuidgen").Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return string(nodeId)
+}
